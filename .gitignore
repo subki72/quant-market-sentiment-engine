@@ -1,0 +1,33 @@
+# --- Python & Jupyter ---
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# --- Virtual Environments ---
+venv/
+env/
+.env
+.venv/
+anaconda3/
+
+# --- IDE Settings ---
+.vscode/
+.idea/
+
+# --- Model Artifacts (IMPORTANT: Too large for GitHub) ---
+# We ignore the heavy model weights to prevent upload errors.
+# You can use Git LFS if you really want to track them.
+models/
+*.bin
+*.pt
+*.pth
+*.onnx
+
+# --- OS System Files ---
+.DS_Store
+Thumbs.db
+
+# --- Local Execution Scripts ---
+run_sentimenttrading.bat
