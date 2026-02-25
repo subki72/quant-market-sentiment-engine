@@ -1,4 +1,4 @@
-# 📈 Financial Market Sentiment Analysis Engine
+# Financial Market Sentiment Analysis Engine
 
 ![Python](https://img.shields.io/badge/Python-3.10-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-GPU-orange)
@@ -102,10 +102,4 @@ The model was evaluated on a validation set of 2,388 financial tweets.
 * Implementation of an Automated Trading Execution engine based on sentiment signals.
 * Dockerizing the application for cloud deployment.
 
-## Author
-
-**Muhammad Syafii Assubki**
-*Law Background | Aspiring Quantitative Developer*
-
-```
 
