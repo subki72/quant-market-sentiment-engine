@@ -2,8 +2,8 @@
 title: Quant Market Sentiment Engine
 colorFrom: blue
 colorTo: indigo
-sdk: docker
-app_port: 7860
+sdk: gradio
+app_file: app.py
 pinned: false
 license: mit
 ---
@@ -172,23 +172,32 @@ flake8 src tests scripts
 
 ---
 
-## Cloud Deployment Guide
+## Cloud Deployment Guide (100% Free - No Credit Card Required)
 
-### Deploy Backend to Hugging Face Spaces
-1. Create a new Space on [Hugging Face](https://huggingface.co/new-space).
-2. Select **Docker SDK** (Blank template).
-3. Push this repository to your Space remote:
+### Deploy Backend to Hugging Face Spaces (Free Tier)
+1. Navigate to [Hugging Face Spaces](https://huggingface.co/new-space).
+2. Space Configuration:
+   - Space name: `quant-market-sentiment-engine`
+   - License: `MIT`
+   - Space SDK: Select **Gradio** (Free - 2 vCPU, 16GB RAM, no credit card required).
+3. Connect your repository or push via Git:
    ```bash
-   git remote add space https://huggingface.co/spaces/assubki/quant-market-sentiment-engine
+   git remote add space https://huggingface.co/spaces/<your-username>/quant-market-sentiment-engine
    git push space main
    ```
-4. The Space will automatically build the `Dockerfile` and serve on port `7860`.
+4. Hugging Face Spaces automatically reads `requirements.txt` and executes `app.py`.
+5. The deployment provides both the interactive Gradio UI and the full FastAPI REST API (`/predict`, `/health`, `/docs`) on `https://<your-username>-quant-market-sentiment-engine.hf.space`.
 
-### Deploy Frontend to Vercel
-1. Import the `frontend/` directory into [Vercel](https://vercel.com).
-2. Set Environment Variable:
-   - `NEXT_PUBLIC_API_URL`: `https://assubki-quant-market-sentiment-engine.hf.space`
-3. Click **Deploy**.
+### Deploy Frontend to Vercel (Free Hobby Tier)
+1. Go to [Vercel](https://vercel.com/new).
+2. Import your GitHub repository (`quant-market-sentiment-engine`).
+3. Project Settings:
+   - **Root Directory**: Click Edit and select `frontend`.
+   - **Framework Preset**: Next.js (automatically detected).
+4. Environment Variables:
+   - Name: `NEXT_PUBLIC_API_URL`
+   - Value: `https://<your-username>-quant-market-sentiment-engine.hf.space` (replace with your active Hugging Face Space URL).
+5. Click **Deploy**. Vercel will build and host the retro-futuristic chassis UI with free automatic HTTPS and global edge routing.
 
 ---
 
