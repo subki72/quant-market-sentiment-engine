@@ -5,6 +5,14 @@ __pycache__/
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
+# --- Testing & Coverage ---
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.coverage.*
+*.coverage
+
 # --- Virtual Environments ---
 venv/
 env/
@@ -12,18 +20,30 @@ env/
 .venv/
 anaconda3/
 
-# --- IDE Settings ---
+# --- IDE Settings & Local Agents ---
 .vscode/
 .idea/
+.agents/
 
-# --- Model Artifacts (IMPORTANT: Too large for GitHub) ---
-# We ignore the heavy model weights to prevent upload errors.
-# You can use Git LFS if you really want to track them.
+# --- Documentation & Internal Prompts ---
+docs/Prompt/
+Prompt/
+
+# --- Model Artifacts ---
 models/
 *.bin
 *.pt
 *.pth
 *.onnx
+*.safetensors
+
+# --- Node / Frontend (Next.js) ---
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+frontend/.env.*.local
+*.log
 
 # --- OS System Files ---
 .DS_Store

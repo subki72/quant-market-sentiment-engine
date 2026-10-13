@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quant-sentiment-backend
+    ports:
+      - "8000:7860"
+    environment:
+      - PORT=7860
+      - HOST=0.0.0.0
+      - LOG_LEVEL=INFO
+      - HF_MODEL_REPO=assubki/fin-sentiment-distilbert
+      - HF_FALLBACK_MODEL=ProsusAI/finbert
+      - CORS_ORIGINS=*
+    volumes:
+      - ./models:/app/models
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: quant-sentiment-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: unless-stopped

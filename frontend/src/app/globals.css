@@ -1,0 +1,197 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-code: 'JetBrains Mono', monospace;
+  --font-tech: 'Chakra Petch', sans-serif;
+
+  --rack-base: #111317;
+  --rack-panel: #181b20;
+  --rack-metal: #20242b;
+  --rack-bezel: #0d0e12;
+  --rack-border: #2e3440;
+  --rack-screws: #3e4451;
+
+  --amber-glow: #ffaa00;
+  --amber-dim: #7c4d00;
+  --amber-tube: #ffbd4a;
+
+  --phosphor-green: #00f090;
+  --phosphor-dim: #005936;
+  --phosphor-bright: #39ff14;
+
+  --crimson-alarm: #ff3344;
+  --crimson-dim: #590e15;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #0c0e12;
+  color: #d6d3d1;
+  font-family: var(--font-mono);
+  overflow-x: hidden;
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+.font-code {
+  font-family: var(--font-code);
+}
+
+.font-tech {
+  font-family: var(--font-tech);
+}
+
+/* Industrial Textures & Skeuomorphic Panels */
+.brushed-metal {
+  background-color: #1a1d24;
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.05) 0%, transparent 60%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 1px, transparent 1px, transparent 3px),
+    linear-gradient(180deg, #1f232b 0%, #16181f 100%);
+}
+
+.anodized-bezel {
+  background: linear-gradient(180deg, #090a0d 0%, #15181e 50%, #0d0e12 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.crt-scanlines {
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.45) 50%),
+    linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 3px, 6px 100%;
+}
+
+.glow-green {
+  text-shadow: 0 0 8px rgba(0, 240, 144, 0.65), 0 0 20px rgba(0, 240, 144, 0.3);
+}
+
+.glow-amber {
+  text-shadow: 0 0 9px rgba(255, 170, 0, 0.75), 0 0 24px rgba(255, 187, 74, 0.35);
+}
+
+.glow-red {
+  text-shadow: 0 0 8px rgba(255, 51, 68, 0.8);
+}
+
+/* Tactile Bolt Head */
+.bolt-screw {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #565d6c 0%, #20242b 65%, #101216 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bolt-screw::after {
+  content: '';
+  width: 8px;
+  height: 2px;
+  background: #0d0f14;
+  box-shadow: 0 0.5px 0.5px rgba(255, 255, 255, 0.2);
+  transform: rotate(38deg);
+}
+
+/* Jewel LED Lamp */
+.jewel-lamp {
+  box-shadow: 0 0 12px #39ff14, 0 0 25px rgba(57, 255, 20, 0.5), inset 0 1px 2px #fff;
+}
+
+.jewel-lamp-amber {
+  box-shadow: 0 0 12px #ffaa00, 0 0 25px rgba(255, 170, 0, 0.5), inset 0 1px 2px #fff;
+}
+
+.jewel-lamp-red {
+  box-shadow: 0 0 12px #ff3344, 0 0 25px rgba(255, 51, 68, 0.5), inset 0 1px 2px #fff;
+}
+
+/* Shadows */
+.shadow-inner-deep {
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.85), inset 0 1px 2px rgba(0, 0, 0, 0.95);
+}
+
+.shadow-chassis {
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.shadow-knob {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+/* VU Meter Flutter and Mechanical Animations */
+@keyframes needle-flutter-a {
+  0% { transform: rotate(18deg); }
+  15% { transform: rotate(26deg); }
+  30% { transform: rotate(23deg); }
+  50% { transform: rotate(31deg); }
+  70% { transform: rotate(28deg); }
+  85% { transform: rotate(33deg); }
+  100% { transform: rotate(18deg); }
+}
+
+@keyframes needle-flutter-b {
+  0% { transform: rotate(-38deg); }
+  25% { transform: rotate(-32deg); }
+  50% { transform: rotate(-39deg); }
+  75% { transform: rotate(-35deg); }
+  100% { transform: rotate(-38deg); }
+}
+
+@keyframes tape-spool {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-needle-ch1 {
+  transform-origin: 130px 145px;
+  animation: needle-flutter-a 4.2s cubic-bezier(0.4, 0.1, 0.2, 1) infinite;
+}
+
+.animate-needle-ch2 {
+  transform-origin: 130px 145px;
+  animation: needle-flutter-b 3.8s cubic-bezier(0.4, 0.1, 0.2, 1) infinite;
+}
+
+.tape-wheel {
+  animation: tape-spool 9s linear infinite;
+}
+
+/* Hide scrollbar for clean tape ticker */
+.scroller-none::-webkit-scrollbar {
+  display: none;
+}
+.scroller-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #111317;
+}
+::-webkit-scrollbar-thumb {
+  background: #2e3440;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4c566a;
+}
