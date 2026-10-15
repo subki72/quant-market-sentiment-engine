@@ -11,10 +11,10 @@ license: mit
 # Quant Market Sentiment Engine
 
 [![CI Quality Gate](https://github.com/subki72/quant-market-sentiment-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/subki72/quant-market-sentiment-engine/actions)
+[![HuggingFace Space](https://img.shields.io/badge/HuggingFace-Spaces_Live-yellow.svg)](https://huggingface.co/spaces/assubki/Quant-Market-Sentiment-Engine)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.2%2B-EE4C2C.svg?logo=pytorch&logoColor=white)](https://pytorch.org/)
-[![HuggingFace](https://img.shields.io/badge/HuggingFace-Transformers-FFD21E.svg?logo=huggingface&logoColor=black)](https://huggingface.co/assubki)
 [![Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen.svg)](https://github.com/subki72/quant-market-sentiment-engine)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -190,13 +190,13 @@ flake8 src tests scripts
 
 ### Deploy Frontend to Vercel (Free Hobby Tier)
 1. Go to [Vercel](https://vercel.com/new).
-2. Import your GitHub repository (`quant-market-sentiment-engine`).
+2. Import your GitHub repository (`subki72/quant-market-sentiment-engine`).
 3. Project Settings:
    - **Root Directory**: Click Edit and select `frontend`.
    - **Framework Preset**: Next.js (automatically detected).
 4. Environment Variables:
    - Name: `NEXT_PUBLIC_API_URL`
-   - Value: `https://<your-username>-quant-market-sentiment-engine.hf.space` (replace with your active Hugging Face Space URL).
+   - Value: `https://assubki-quant-market-sentiment-engine.hf.space`
 5. Click **Deploy**. Vercel will build and host the retro-futuristic chassis UI with free automatic HTTPS and global edge routing.
 
 ---
