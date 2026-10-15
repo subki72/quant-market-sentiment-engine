@@ -1,13 +1,3 @@
----
-title: Quant Market Sentiment Engine
-colorFrom: blue
-colorTo: indigo
-sdk: gradio
-app_file: app.py
-pinned: false
-license: mit
----
-
 # Quant Market Sentiment Engine
 
 [![CI Quality Gate](https://github.com/subki72/quant-market-sentiment-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/subki72/quant-market-sentiment-engine/actions)
