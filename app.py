@@ -102,21 +102,13 @@ with gr.Blocks(title="Quant Market Sentiment Engine") as demo:
     )
 
 
-# Configure CORS on demo.app so Next.js frontend on Vercel can query it
-demo.app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.get_cors_origins(),
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Attach FastAPI API routes directly to demo.app
+# Attach FastAPI API routes for ASGI runners (if imported)
 demo.app.include_router(api_router)
-
-# Expose app for ASGI runners
 app = demo.app
 
 if __name__ == "__main__":
     # ssr_mode=False: disable SSR/Node.js server (required for ZeroGPU Spaces and CPU-only environments)
-    demo.launch(server_name="0.0.0.0", server_port=7860, ssr_mode=False)
+    # prevent_thread_lock=True: allows attaching FastAPI routes to demo.app before locking main thread
+    demo.launch(server_name="0.0.0.0", server_port=7860, ssr_mode=False, prevent_thread_lock=True)
+    demo.app.include_router(api_router)
+    demo.block_thread()
