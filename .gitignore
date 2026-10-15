@@ -25,8 +25,9 @@ anaconda3/
 .idea/
 .agents/
 
-# --- Documentation & Internal Prompts ---
-docs/Prompt/
+# --- Internal Reports & Prompt Scratch ---
+docs/
+qa-report/
 Prompt/
 
 # --- Model Artifacts ---
