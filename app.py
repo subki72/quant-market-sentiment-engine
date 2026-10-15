@@ -1,7 +1,7 @@
 """
-Hugging Face Spaces Entry Point (Gradio SDK + FastAPI Mount).
+Hugging Face Spaces Entry Point (Gradio 6 SDK with FastAPI Route Integration).
 Runs 100% Free on Hugging Face Spaces without requiring Docker or credit card.
-Serves both the interactive Gradio UI and the full FastAPI REST API (/predict, /health, /docs).
+Serves both the interactive Gradio UI and the full FastAPI REST API (/predict, /health, /health/ready).
 """
 import os
 import sys
@@ -10,10 +10,17 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import gradio as gr
-import uvicorn
-from src.app import app
-from src.services.sentiment_service import get_sentiment_service
+from fastapi.middleware.cors import CORSMiddleware
+from src.api.routes import router as api_router
 from src.config import get_settings
+from src.logger import setup_logging
+from src.services.sentiment_service import get_sentiment_service
+
+# Initialize logging and load model weights
+setup_logging()
+settings = get_settings()
+service = get_sentiment_service()
+service.load_model()
 
 
 def analyze_financial_sentiment(text: str):
@@ -21,7 +28,6 @@ def analyze_financial_sentiment(text: str):
     if not text or not text.strip():
         return "Please input financial text or headline."
     
-    service = get_sentiment_service()
     if not service.is_ready:
         service.load_model()
         
@@ -40,16 +46,13 @@ def analyze_financial_sentiment(text: str):
 
 
 # Build Gradio UI for Hugging Face Space visitors
-with gr.Blocks(
-    title="Quant Market Sentiment Engine",
-    theme=gr.themes.Base()
-) as demo:
+with gr.Blocks(title="Quant Market Sentiment Engine") as demo:
     gr.Markdown(
         """
         # QUANT MARKET SENTIMENT ENGINE // UNIT MOD-01
         ### Production-grade FinBERT Transformer Sentiment Inference Microservice
         
-        - **REST API Endpoints**: Available at `/predict`, `/health`, `/health/ready`, `/docs` (Swagger UI).
+        - **REST API Endpoints**: Available at `/predict`, `/health`, `/health/ready`.
         - **Frontend Integration**: Connect this Space directly to the Next.js retro-futuristic rack chassis frontend.
         """
     )
@@ -82,16 +85,20 @@ with gr.Blocks(
     )
 
 
-# Mount Gradio Blocks onto FastAPI
-# FastAPI endpoints (/predict, /health, /docs) take precedence, while Gradio serves the web UI at "/"
-app = gr.mount_gradio_app(app, demo, path="/")
+# Configure CORS on demo.app so Next.js frontend on Vercel can query it
+demo.app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.get_cors_origins(),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# Attach FastAPI API routes directly to demo.app
+demo.app.include_router(api_router)
+
+# Expose app for ASGI runners
+app = demo.app
 
 if __name__ == "__main__":
-    settings = get_settings()
-    port = int(os.environ.get("PORT", 7860))
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=port
-    )
+    demo.launch()
