@@ -1,0 +1,18 @@
+name: Keep Space Warm
+
+on:
+  schedule:
+    # Runs every 30 minutes to prevent Hugging Face Spaces free-tier from entering sleep mode
+    - cron: '*/30 * * * *'
+  workflow_dispatch: # Allows manual ping trigger from GitHub Actions tab
+
+jobs:
+  ping-space:
+    name: Ping HF Space Health
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Keep-Warm Ping
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://assubki-quant-market-sentiment-engine.hf.space/health || true)
+          echo "Hugging Face Space /health ping returned HTTP status: $HTTP_STATUS"

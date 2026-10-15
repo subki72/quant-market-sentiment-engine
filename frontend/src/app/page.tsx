@@ -63,6 +63,10 @@ export default function Home() {
   const [activePreset, setActivePreset] = useState<string>('P01');
   const [mainsPower, setMainsPower] = useState<boolean>(true);
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'waking' | 'offline'>('checking');
+  const [wakeElapsed, setWakeElapsed] = useState<number>(0);
+  const [wakeAttempt, setWakeAttempt] = useState<number>(0);
+  const [isSimulated, setIsSimulated] = useState<boolean>(false);
   const [timestamp, setTimestamp] = useState<string>('2025.10.24-14:02:49.034');
   const [rotaryAngles, setRotaryAngles] = useState({ sens: 45, decay: -12, damp: 90 });
   const [networkRtt, setNetworkRtt] = useState<number | null>(24);
@@ -92,21 +96,52 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  // Health check API polling with background tab pause
+  // Health check API polling with smart cold-start detection and responsive retry
   useEffect(() => {
     let isMounted = true;
+    let timerId: ReturnType<typeof setTimeout>;
+
     const checkHealth = async () => {
       if (typeof document !== 'undefined' && document.hidden) return;
       try {
-        const res = await fetch(`${apiUrl}/health`, { method: 'GET' });
-        if (isMounted) setApiOnline(res.ok);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
+        const res = await fetch(`${apiUrl}/health`, { 
+          method: 'GET',
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (res.ok) {
+          if (isMounted) {
+            setApiOnline(true);
+            setBackendStatus('online');
+            setWakeElapsed(0);
+          }
+          // Connected: relax polling interval to 25s
+          timerId = setTimeout(checkHealth, 25000);
+        } else {
+          // Status 502/503/504: Space is booting/cold starting
+          if (isMounted) {
+            setApiOnline(false);
+            setBackendStatus('waking');
+            setWakeElapsed((prev) => prev + 3);
+          }
+          // While waking up, probe every 3.5s
+          timerId = setTimeout(checkHealth, 3500);
+        }
       } catch {
-        if (isMounted) setApiOnline(false);
+        if (isMounted) {
+          setApiOnline(false);
+          setBackendStatus('waking');
+          setWakeElapsed((prev) => prev + 3);
+        }
+        // Connection error or timeout while booting: probe again in 3.5s
+        timerId = setTimeout(checkHealth, 3500);
       }
     };
 
     checkHealth();
-    const interval = setInterval(checkHealth, 25000);
 
     const handleVisibilityChange = () => {
       if (typeof document !== 'undefined' && !document.hidden) {
@@ -117,79 +152,117 @@ export default function Home() {
 
     return () => {
       isMounted = false;
-      clearInterval(interval);
+      clearTimeout(timerId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [apiUrl]);
 
-  // Execute Sentiment Inference
+  // Execute Sentiment Inference with multi-attempt auto-retry on cold-start
   const handleAnalyze = async () => {
     const trimmed = inputText.trim();
     if (!trimmed) return;
 
     setLoading(true);
+    setWakeAttempt(0);
     const startTime = performance.now();
-    try {
-      const response = await fetch(`${apiUrl}/predict`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: trimmed }),
-      });
 
-      const rtt = Math.round(performance.now() - startTime);
-      setNetworkRtt(rtt);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+    const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = 25000) => {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const res = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(id);
+        return res;
+      } catch (err) {
+        clearTimeout(id);
+        throw err;
       }
+    };
 
-      const data: PredictionResult = await response.json();
-      setResult(data);
-    } catch {
-      const rtt = Math.round(performance.now() - startTime);
-      setNetworkRtt(rtt);
-      // In offline / fallback mode, simulate realistic dynamic response based on text keywords
-      const upper = trimmed.toUpperCase();
-      let simSignal: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
-      let simConf = 75.0;
-      let pBull = 20.0;
-      let pBear = 20.0;
-      let pNeu = 60.0;
+    let successData: PredictionResult | null = null;
 
-      if (upper.includes('RECORD') || upper.includes('BEAT') || upper.includes('SURGE') || upper.includes('GROWTH') || upper.includes('EXPANDING')) {
-        simSignal = 'BULLISH';
-        simConf = 93.8;
-        pBull = 93.8;
-        pNeu = 3.2;
-        pBear = 3.0;
-      } else if (upper.includes('SUBPOENA') || upper.includes('PROBE') || upper.includes('LOSS') || upper.includes('CRASH') || upper.includes('INVESTIGATION')) {
-        simSignal = 'BEARISH';
-        simConf = 89.4;
-        pBear = 89.4;
-        pNeu = 6.4;
-        pBull = 4.2;
-      } else if (upper.includes('RATE CUT') || upper.includes('EASING')) {
-        simSignal = 'BULLISH';
-        simConf = 82.5;
-        pBull = 82.5;
-        pNeu = 12.0;
-        pBear = 5.5;
+    // Retry loop: up to 3 attempts with progressive delay (accommodating cold-start)
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        setWakeAttempt(attempt);
+        const response = await fetchWithTimeout(
+          `${apiUrl}/predict`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: trimmed }),
+          },
+          attempt === 1 ? 25000 : 15000
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data: PredictionResult = await response.json();
+        successData = data;
+        setApiOnline(true);
+        setBackendStatus('online');
+        setIsSimulated(false);
+        break;
+      } catch {
+        if (attempt < 3) {
+          setBackendStatus('waking');
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+        }
       }
-
-      setResult({
-        text: trimmed,
-        signal: simSignal,
-        confidence: simConf,
-        probabilities: {
-          BULLISH: pBull,
-          NEUTRAL: pNeu,
-          BEARISH: pBear,
-        },
-        latency_ms: 18.4,
-      });
-    } finally {
-      setTimeout(() => setLoading(false), 400);
     }
+
+    const rtt = Math.round(performance.now() - startTime);
+    setNetworkRtt(rtt);
+
+    if (successData) {
+      setResult(successData);
+      setLoading(false);
+      return;
+    }
+
+    // Heuristic fallback if remote server is unreachable after all retries
+    setIsSimulated(true);
+    const upper = trimmed.toUpperCase();
+    let simSignal: 'BULLISH' | 'BEARISH' | 'NEUTRAL' = 'NEUTRAL';
+    let simConf = 75.0;
+    let pBull = 20.0;
+    let pBear = 20.0;
+    let pNeu = 60.0;
+
+    if (upper.includes('RECORD') || upper.includes('BEAT') || upper.includes('SURGE') || upper.includes('GROWTH') || upper.includes('EXPANDING')) {
+      simSignal = 'BULLISH';
+      simConf = 93.8;
+      pBull = 93.8;
+      pNeu = 3.2;
+      pBear = 3.0;
+    } else if (upper.includes('SUBPOENA') || upper.includes('PROBE') || upper.includes('LOSS') || upper.includes('CRASH') || upper.includes('INVESTIGATION')) {
+      simSignal = 'BEARISH';
+      simConf = 89.4;
+      pBear = 89.4;
+      pNeu = 6.4;
+      pBull = 4.2;
+    } else if (upper.includes('RATE CUT') || upper.includes('EASING')) {
+      simSignal = 'BULLISH';
+      simConf = 82.5;
+      pBull = 82.5;
+      pNeu = 12.0;
+      pBear = 5.5;
+    }
+
+    setResult({
+      text: trimmed,
+      signal: simSignal,
+      confidence: simConf,
+      probabilities: {
+        BULLISH: pBull,
+        NEUTRAL: pNeu,
+        BEARISH: pBear,
+      },
+      latency_ms: 18.4,
+    });
+    setLoading(false);
   };
 
   const selectPreset = (key: string) => {
@@ -302,9 +375,31 @@ export default function Home() {
               <div className="h-6 w-px bg-stone-800" />
               <div className="flex flex-col text-left">
                 <span className="text-[9px] uppercase tracking-wider text-stone-500 font-tech">IO THREAD STATUS</span>
-                <span className="text-[11px] font-mono text-emerald-400 font-semibold flex items-center gap-1.5">
-                  <span className={`w-1.5 h-1.5 rounded-full ${apiOnline === false ? 'bg-amber-400' : 'bg-emerald-400'} inline-block animate-ping`} />
-                  {apiOnline === false ? 'LOCAL CORE / ISOLATED' : 'RECEPTIVE / FAST-API'}
+                <span className="text-[11px] font-mono font-semibold flex items-center gap-1.5">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full inline-block ${
+                      backendStatus === 'online'
+                        ? 'bg-emerald-400 animate-ping'
+                        : backendStatus === 'waking'
+                        ? 'bg-amber-400 animate-pulse'
+                        : 'bg-stone-500'
+                    }`}
+                  />
+                  <span
+                    className={
+                      backendStatus === 'online'
+                        ? 'text-emerald-400'
+                        : backendStatus === 'waking'
+                        ? 'text-amber-300'
+                        : 'text-stone-400'
+                    }
+                  >
+                    {backendStatus === 'online'
+                      ? 'LIVE // FAST-API CONNECTED'
+                      : backendStatus === 'waking'
+                      ? `COLD START // WAKING UP (~${Math.max(2, 25 - wakeElapsed)}s)`
+                      : 'OFFLINE // SIMULATOR READY'}
+                  </span>
                 </span>
               </div>
             </div>
@@ -451,6 +546,29 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Hugging Face Spaces Cold-Start Telemetry Notice */}
+            {backendStatus === 'waking' && (
+              <div className="bg-amber-950/40 border border-amber-600/50 p-2.5 rounded text-[10px] font-mono text-amber-300 flex items-center justify-between shadow-inner animate-pulse">
+                <div className="flex items-center space-x-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                  <span className="font-tech font-bold tracking-wide">
+                    SPACES CONTAINER BOOTING UP FROM HIBERNATION...
+                  </span>
+                </div>
+                <span className="text-[9px] bg-amber-900/60 text-amber-200 px-2 py-0.5 rounded border border-amber-700/60 font-code">
+                  EST: ~{Math.max(2, 25 - wakeElapsed)}s
+                </span>
+              </div>
+            )}
+
+            {/* Simulated Mode Warning if Offline */}
+            {isSimulated && backendStatus !== 'online' && (
+              <div className="bg-stone-900/90 border border-stone-700 p-2 rounded text-[10px] font-mono text-stone-400 flex items-center justify-between">
+                <span>SIMULATION ENGINE ACTIVE (BACKEND RECONNECTING...)</span>
+                <span className="text-amber-400 font-bold">FALLBACK</span>
+              </div>
+            )}
+
             {/* Big Industrial Push Button: ENGAGE QUANT CLASSIFIER */}
             <div className="py-1">
               <button
@@ -466,7 +584,13 @@ export default function Home() {
                   </svg>
                 </div>
                 <span className="font-tech font-bold text-sm tracking-widest uppercase text-white drop-shadow-md">
-                  {loading ? 'SAMPLING DSP WAVEFORM...' : 'ENGAGE QUANT CLASSIFIER'}
+                  {loading
+                    ? wakeAttempt > 1
+                      ? `WAKING CONTAINER (RETRY ${wakeAttempt}/3)...`
+                      : 'SAMPLING DSP WAVEFORM...'
+                    : backendStatus === 'waking'
+                    ? 'ENGAGE CLASSIFIER (AUTO-WAKE)'
+                    : 'ENGAGE QUANT CLASSIFIER'}
                 </span>
                 <div className="w-2 h-2 rounded-full bg-emerald-300 shadow-[0_0_8px_#39ff14]" />
               </button>
