@@ -19,15 +19,29 @@ from src.config import get_settings
 from src.logger import setup_logging
 from src.services.sentiment_service import get_sentiment_service
 
-# Initialize logging and load model weights
+# Import spaces if available (required for ZeroGPU Spaces)
+# Falls back gracefully on local machines or CPU Spaces
+try:
+    import spaces
+    HAS_SPACES = True
+except ImportError:
+    HAS_SPACES = False
+    # Create a no-op decorator so the code runs identically on local dev
+    class spaces:  # type: ignore[no-redef]
+        @staticmethod
+        def GPU(fn):
+            return fn
+
+# Initialize logging and load model weights on startup (CPU - always available)
 setup_logging()
 settings = get_settings()
 service = get_sentiment_service()
 service.load_model()
 
 
+@spaces.GPU
 def analyze_financial_sentiment(text: str):
-    """Gradio handler for direct web visitors."""
+    """Gradio handler for direct web visitors. Decorated with @spaces.GPU for ZeroGPU compliance."""
     if not text or not text.strip():
         return "Please input financial text or headline."
 
