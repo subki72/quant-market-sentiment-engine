@@ -9,6 +9,9 @@ import sys
 # Ensure root directory is in sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Disable SSR globally before importing Gradio to avoid Node.js server conflicts on ZeroGPU Spaces
+os.environ.setdefault("GRADIO_SSR_MODE", "false")
+
 import gradio as gr
 from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes import router as api_router
@@ -27,10 +30,10 @@ def analyze_financial_sentiment(text: str):
     """Gradio handler for direct web visitors."""
     if not text or not text.strip():
         return "Please input financial text or headline."
-    
+
     if not service.is_ready:
         service.load_model()
-        
+
     result = service.analyze(text)
     return {
         "Signal": result.sentiment,
@@ -51,12 +54,12 @@ with gr.Blocks(title="Quant Market Sentiment Engine") as demo:
         """
         # QUANT MARKET SENTIMENT ENGINE // UNIT MOD-01
         ### Production-grade FinBERT Transformer Sentiment Inference Microservice
-        
+
         - **REST API Endpoints**: Available at `/predict`, `/health`, `/health/ready`.
         - **Frontend Integration**: Connect this Space directly to the Next.js retro-futuristic rack chassis frontend.
         """
     )
-    
+
     with gr.Row():
         with gr.Column(scale=3):
             input_box = gr.Textbox(
@@ -65,7 +68,7 @@ with gr.Blocks(title="Quant Market Sentiment Engine") as demo:
                 lines=4,
             )
             analyze_btn = gr.Button("Analyze Signal", variant="primary")
-            
+
             gr.Examples(
                 examples=[
                     ["Operating profit rose 18% YoY to €450M, beating consensus estimates."],
@@ -74,10 +77,10 @@ with gr.Blocks(title="Quant Market Sentiment Engine") as demo:
                 ],
                 inputs=input_box
             )
-        
+
         with gr.Column(scale=2):
             output_json = gr.JSON(label="Signal Analysis Output")
-            
+
     analyze_btn.click(
         fn=analyze_financial_sentiment,
         inputs=input_box,
@@ -101,4 +104,5 @@ demo.app.include_router(api_router)
 app = demo.app
 
 if __name__ == "__main__":
-    demo.launch()
+    # ssr_mode=False: disable SSR/Node.js server (required for ZeroGPU Spaces and CPU-only environments)
+    demo.launch(server_name="0.0.0.0", server_port=7860, ssr_mode=False)
