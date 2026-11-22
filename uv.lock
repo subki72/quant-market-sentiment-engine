@@ -1,0 +1,19 @@
+version = 1
+requires-python = ">=3.10"
+
+[[package]]
+name = "quant-market-sentiment-engine"
+version = "1.0.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "fastapi" },
+    { name = "uvicorn" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "python-dotenv" },
+    { name = "torch" },
+    { name = "transformers" },
+    { name = "huggingface-hub" },
+    { name = "gradio" },
+    { name = "spaces" },
+]
