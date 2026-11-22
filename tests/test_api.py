@@ -129,7 +129,8 @@ async def test_predict_probabilities_sum_100(async_client: AsyncClient):
 @pytest.mark.asyncio
 async def test_optional_api_key_protection(mock_service: MockSentimentService):
     """Verifies API Key validation when configured in settings."""
-    test_settings = Settings(api_key="secret-quant-key-123")
+    dummy_key = "dummy-mock-test-token"
+    test_settings = Settings(api_key=dummy_key)
     app.dependency_overrides[get_settings] = lambda: test_settings
     app.dependency_overrides[get_sentiment_service] = lambda: mock_service
 
@@ -149,7 +150,7 @@ async def test_optional_api_key_protection(mock_service: MockSentimentService):
         res_valid_header = await client.post(
             "/predict",
             json=payload,
-            headers={"X-API-Key": "secret-quant-key-123"}
+            headers={"X-API-Key": dummy_key}
         )
         assert res_valid_header.status_code == 200
 
@@ -157,7 +158,7 @@ async def test_optional_api_key_protection(mock_service: MockSentimentService):
         res_valid_bearer = await client.post(
             "/predict",
             json=payload,
-            headers={"Authorization": "Bearer secret-quant-key-123"}
+            headers={"Authorization": f"Bearer {dummy_key}"}
         )
         assert res_valid_bearer.status_code == 200
 
