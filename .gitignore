@@ -26,7 +26,6 @@ anaconda3/
 .agents/
 
 # --- Internal Reports & Prompt Scratch ---
-docs/
 qa-report/
 Prompt/
 

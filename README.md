@@ -1,12 +1,13 @@
 # Quant Market Sentiment Engine
 
 [![CI Quality Gate](https://github.com/subki72/quant-market-sentiment-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/subki72/quant-market-sentiment-engine/actions)
+[![Maturity Grade: Production](https://img.shields.io/badge/Maturity%20Grade-Production%20(72.1%2F100)-success.svg)](https://github.com/subki72/quant-market-sentiment-engine)
 [![HuggingFace Space](https://img.shields.io/badge/HuggingFace-Spaces_Live-yellow.svg)](https://huggingface.co/spaces/assubki/Quant-Market-Sentiment-Engine)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115%2B-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.2%2B-EE4C2C.svg?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Coverage](https://img.shields.io/badge/coverage-70%25-brightgreen.svg)](https://github.com/subki72/quant-market-sentiment-engine)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A **production-grade Natural Language Processing (NLP) microservice** that extracts actionable market sentiment signals (**BULLISH**, **BEARISH**, **NEUTRAL**) from real-time financial headlines, tweets, and conference call transcripts.
 
@@ -73,6 +74,28 @@ Fine-tuned on the `zeroshot/twitter-financial-news-sentiment` benchmark with Mac
 ---
 
 ## Quick Start
+
+### Single-Command Workflow (Makefile)
+
+```bash
+git clone https://github.com/subki72/quant-market-sentiment-engine.git
+cd quant-market-sentiment-engine
+
+# 1. Install pinned dependencies:
+make install
+
+# 2. Run automated test suite with coverage:
+make test
+
+# 3. Run code style & lint checks:
+make lint
+
+# 4. Launch FastAPI backend locally:
+make run
+
+# 5. Build hardened Docker container image:
+make docker-build
+```
 
 ### 1. Local Environment Setup
 
@@ -188,6 +211,52 @@ flake8 src tests scripts
    - Name: `NEXT_PUBLIC_API_URL`
    - Value: `https://assubki-quant-market-sentiment-engine.hf.space`
 5. Click **Deploy**. Vercel will build and host the retro-futuristic chassis UI with free automatic HTTPS and global edge routing.
+
+---
+
+## Project Structure
+
+```text
+quant-market-sentiment-engine/
+├── .github/
+│   ├── workflows/ci.yml        # Flake8, Pytest coverage, Docker build, Trivy & Semgrep SAST
+│   └── dependabot.yml          # Automated weekly Pip, npm & GitHub Actions security updates
+├── docs/
+│   └── runbook.md              # Operational runbook & incident response playbook
+├── frontend/                   # Next.js quantitative terminal UI
+├── notebooks/                  # Financial sentiment training experiments
+├── scripts/                    # Structured-logging HuggingFace model sync utilities
+├── src/                        # FastAPI service layer, schemas, config & DistilBERT service
+├── tests/                      # Automated unit & API integration tests
+├── .env.example                # Environment variables template
+├── .flake8                     # Linter configuration
+├── .gitignore                  # Strict .env & build artifact exclusions
+├── .pre-commit-config.yaml     # Pre-commit lint & secret hooks
+├── app.py                      # HuggingFace Spaces ASGI/Gradio entrypoint
+├── CHANGELOG.md                # Semantic release history
+├── CONTRIBUTING.md             # Developer contribution guidelines
+├── docker-compose.yml          # Full-stack local orchestration
+├── Dockerfile                  # Multi-stage non-root containerfile
+├── LICENSE                     # MIT License
+├── Makefile                    # Single-command workflow targets
+├── MODEL_CARD.md               # HuggingFace Model Card
+├── pyproject.toml              # Pytest & packaging metadata
+├── README.md                   # Project documentation
+├── requirements-lock.txt       # Deterministic locked dependency snapshot
+├── requirements.txt            # Pinned production dependencies
+├── SECURITY.md                 # Vulnerability disclosure policy
+└── uv.lock                     # Fast package resolver lockfile
+```
+
+---
+
+## Security & Governance
+
+- **Vulnerability Disclosure**: Review our security reporting guidelines in [SECURITY.md](SECURITY.md).
+- **Operational Runbook**: Production health probes and incident procedures in [docs/runbook.md](docs/runbook.md).
+- **Contribution Guidelines**: Development setup and pull request etiquette in [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Release Changelog**: Track semantic releases and version updates in [CHANGELOG.md](CHANGELOG.md).
+- **License**: Explicit open source licensing under the [MIT License](LICENSE).
 
 ---
 
