@@ -2,26 +2,31 @@
 Utility script to upload fine-tuned model artifacts to Hugging Face Hub.
 """
 import argparse
+import logging
 import os
 import sys
+from typing import Optional
 from huggingface_hub import HfApi, login
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
+logger = logging.getLogger(__name__)
 
-def upload_model(repo_id: str, folder_path: str, token: str = None) -> None:
+
+def upload_model(repo_id: str, folder_path: str, token: Optional[str] = None) -> None:
     """Uploads model weights and tokenizer from folder_path to Hugging Face Hub."""
     if not os.path.exists(folder_path):
-        print(f"Error: Model directory '{folder_path}' does not exist.")
-        print("Please train the model via notebook or place weights inside the directory.")
+        logger.error("Model directory '%s' does not exist.", folder_path)
+        logger.info("Please train the model via notebook or place weights inside the directory.")
         sys.exit(1)
 
     hf_token = token or os.getenv("HF_TOKEN")
     if hf_token:
         login(token=hf_token)
     else:
-        print("No HF_TOKEN specified. Attempting to use existing Hugging Face credentials...")
+        logger.warning("No HF_TOKEN specified. Attempting to use existing Hugging Face credentials...")
 
     api = HfApi()
-    print(f"Uploading files from '{folder_path}' to repository '{repo_id}'...")
+    logger.info("Uploading files from '%s' to repository '%s'...", folder_path, repo_id)
 
     try:
         api.create_repo(repo_id=repo_id, repo_type="model", exist_ok=True)
@@ -29,11 +34,11 @@ def upload_model(repo_id: str, folder_path: str, token: str = None) -> None:
             folder_path=folder_path,
             repo_id=repo_id,
             repo_type="model",
-            commit_message="Add fine-tuned DistilBERT financial sentiment model weights"
+            commit_message="Add fine-tuned DistilBERT financial sentiment model weights",
         )
-        print(f"Success! Model uploaded to https://huggingface.co/{repo_id}")
+        logger.info("Success! Model uploaded to https://huggingface.co/%s", repo_id)
     except Exception as exc:
-        print(f"Failed to upload model: {exc}")
+        logger.error("Failed to upload model: %s", exc)
         sys.exit(1)
 
 
@@ -43,19 +48,19 @@ def main() -> None:
         "--repo-id",
         type=str,
         default=os.getenv("HF_MODEL_REPO", "assubki/fin-sentiment-distilbert"),
-        help="Target Hugging Face Model repository ID (e.g. assubki/fin-sentiment-distilbert)"
+        help="Target Hugging Face Model repository ID (e.g. assubki/fin-sentiment-distilbert)",
     )
     parser.add_argument(
         "--folder",
         type=str,
         default="./models",
-        help="Path to local directory containing model weights and config"
+        help="Path to local directory containing model weights and config",
     )
     parser.add_argument(
         "--token",
         type=str,
         default=None,
-        help="Hugging Face personal access token (with write access)"
+        help="Hugging Face personal access token (with write access)",
     )
 
     args = parser.parse_args()
